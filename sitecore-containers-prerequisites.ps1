@@ -395,7 +395,7 @@ function Invoke-SoftwareCheck {
         $dockerNetworkSuccess = (& docker run --rm mcr.microsoft.com/powershell:lts-nanoserver-1809 pwsh.exe -Command Test-Connection -TcpPort 80 -TargetName nuget.org)
         if ($dockerNetworkSuccess -eq "True") {
             Write-Host "+ Docker Desktop can successfully reach the internet with current workstation and/or DNS settings." -ForegroundColor Green
-            $script:dockerDNSSuccess = $false
+            $script:dockerDNSSuccess = $true
         }
         else {
             Write-Host "`Trying again with forced DNS (okay if test above without forced DNS failed as long as this next, forced DNS test works)..." -ForegroundColor Cyan
@@ -403,7 +403,7 @@ function Invoke-SoftwareCheck {
             if ($dockerNetworkSuccess -eq "True")
             {
                 Write-Host "+ Docker Desktop can successfully reach the internet with forced Google + CloudFlare Public DNS settings. This may mean that you need to use similar settings in your Docker daemon.json (for all solutions) or the docker-compose.yml for your solution(s)." -ForegroundColor Yellow
-                $script:dockerDNSSuccess = $false
+                $script:dockerDNSSuccess = $true
             }
             else {
                 Write-Host "X Docker Desktop cannot reach the internet. Check Docker network configuration and the InterfaceMetric values on your network adapter." -ForegroundColor Red
@@ -486,7 +486,7 @@ function Invoke-FullPrerequisiteCheck {
 
     Write-Host "`n**********************************************`n" -ForegroundColor Cyan 
 
-    if ($script:HwCoresCheckPassed -and $script:hwRAMCheckPassed -and $script:diskStorageCheckPassed -and $script:OSCheckPassed -and $script:IISOffCheckPassed -and $script:hyperVEnabled -and $script:containersFeatureEnabled -and $script:dockerInstalled -and $script:dockerRunning -and $script:tcpPortsAvailable -and $psModuleScDockerTools) {
+    if ($script:HwCoresCheckPassed -and $script:hwRAMCheckPassed -and $script:diskStorageCheckPassed -and $script:OSCheckPassed -and $script:IISOffCheckPassed -and $script:hyperVEnabled -and $script:containersFeatureEnabled -and $script:dockerInstalled -and $script:dockerRunning -and $script:dockerDNSSuccess -and $script:tcpPortsAvailable -and $psModuleScDockerTools) {
         Write-Host "This machine is READY to for Sitecore Containers!`n`n" -ForegroundColor Green
     }
     else {
@@ -725,6 +725,9 @@ function Complete-Test ($testCode) {
                 elseif ($script:dockerDNSSuccess) {
                     exit 0
                 }
+                else {
+                    exit 1
+                }
             }
             else
             {
@@ -768,6 +771,9 @@ function Complete-Test ($testCode) {
                 }
                 elseif ($script:dockerDNSSuccess) {
                     exit 0
+                }
+                else {
+                    exit 1
                 }
             }
             else
